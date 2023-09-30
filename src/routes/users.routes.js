@@ -24,22 +24,6 @@ userRouter.get("/:id", async (req, res) => {
   }
 });
 
-userRouter.post("/", async (req, res) => {
-  const { first_name, last_name, age, email, password } = req.body;
-  try {
-    const newUser = await userManager.createUser(
-      first_name,
-      last_name,
-      age,
-      email,
-      password
-    );
-    res.status(200).send({ response: "Ok", mensaje: newUser });
-  } catch (error) {
-    res.status(400).send({ response: "Error", mensaje: error });
-  }
-});
-
 userRouter.put("/:id", async (req, res) => {
   const { id } = req.params;
   const { first_name, last_name, age, email, password } = req.body;

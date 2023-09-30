@@ -23,7 +23,7 @@ if (dataUser != {}) {
   div.setAttribute("role", "alert");
   div.setAttribute("id", "messageWelcome");
   const strong = document.createElement("strong");
-  strong.innerText = `¡Bienvenido ${dataUser.data.first_name} ${dataUser.data.last_name} a nuestro coffe shopp online!`;
+  strong.innerText = `¡Bienvenido ${dataUser.payload.first_name} ${dataUser.payload.last_name} a nuestro coffe shopp online!`;
   div.appendChild(strong);
   const buttonClose = document.createElement("button");
   buttonClose.setAttribute("class", "btn-close");
@@ -70,6 +70,24 @@ botones.forEach((boton) => {
       })
       .then((data) => {
         console.log(data);
+        if (data.products) {
+          console.log(data.products);
+          data.products.forEach((product, index) => {
+            fetch(`http://localhost:8080/api/carts/${cid}`, {
+              method: "GET",
+            }).then((res) => {
+              if (!res.ok) {
+                throw new Error("Hubo un error al procesar la solicitud");
+              } else {
+                window.location.href = `http://localhost:8080/api/carts/${cid}`;
+              }
+            });
+          });
+          // let quantity = product.quantity;
+          // document.getElementById("quantity-" + index).innerText =
+          //   "Cantidad: " + quantity;
+          // });
+        }
       });
   });
 });

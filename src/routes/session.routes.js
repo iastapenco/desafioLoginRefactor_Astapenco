@@ -1,8 +1,7 @@
 import { Router } from "express";
-import SessionManager from "../dao/managers_mongo/sessionManagerMongo.js";
+import passport from "passport";
 
 const sessionRouter = Router();
-const sessionManager = new SessionManager();
 
 sessionRouter.get("/login", async (req, res) => {
   res.render("login", {
@@ -10,28 +9,83 @@ sessionRouter.get("/login", async (req, res) => {
   });
 });
 
-sessionRouter.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+sessionRouter.post(
+  "/login",
+  passport.authenticate("login"),
+  async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(401).send({ mensaje: "Usuario inválido" });
+      }
+      req.session.user = {
+        first_name: req.user.first_name,
+        last_name: req.user.last_name,
+        age: req.user.age,
+        email: req.user.email,
+      };
+      const userWithoutPassword = req.user.toObject();
+      delete userWithoutPassword.password;
 
-  try {
-    if (req.session.login) {
-      res.status(200).send({ resultado: "Login ya existente" });
+      res.status(200).send({ payload: userWithoutPassword });
+    } catch (error) {
+      return res
+        .status(500)
+        .send({ mensaje: `Error al iniciar sesión: ${error} ` });
     }
-    const user = await sessionManager.validUser(email, password);
-
-    if (user) {
-      req.session.login = true;
-      const dataUser = await sessionManager.findUser(email);
-      res.json({ data: dataUser });
-    } else {
-      res
-        .status(401)
-        .send({ resultado: "Email o Contraseña no válida", mensaje: password });
-    }
-  } catch (error) {
-    res.status(400).send({ mensaje: "Error en login", error: error });
   }
-});
+);
+
+sessionRouter.get(
+  "/github",
+  passport.authenticate("github", { scope: ["user: email"] }),
+  async (req, res) => {
+    res.status(200).send({ mensaje: "Usuario registrado" });
+  }
+);
+
+sessionRouter.get(
+  "/githubCallback",
+  passport.authenticate("github"),
+  async (req, res) => {
+    req.session.user = req.user;
+    res.status(200).send({ mensaje: "Usuario logueado" });
+  }
+);
+
+sessionRouter.post(
+  "/register",
+  passport.authenticate("register"),
+  async (req, res) => {
+    try {
+      if (!req.user) {
+        return res.status(400).send({ mensaje: "Usuario ya existente" });
+      }
+
+      res.status(200).send({ mensaje: "Usuario registrado" });
+    } catch (error) {
+      return res
+        .status(500)
+        .send({ mensaje: `Error al registrar usuario: ${error} ` });
+    }
+  }
+);
+
+sessionRouter.get(
+  "/github",
+  passport.authenticate("github", { scope: ["user:email"] }),
+  async (req, res) => {
+    res.status(200).send({ mensaje: "Usuario registrado" });
+  }
+);
+
+sessionRouter.get(
+  "/githubCallback",
+  passport.authenticate("github"),
+  async (req, res) => {
+    req.session.user = req.user;
+    res.status(200).send({ mensaje: "Usuario logueado" });
+  }
+);
 
 sessionRouter.get("/logout", async (req, res) => {
   if (req.session.login) {

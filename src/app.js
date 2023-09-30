@@ -12,6 +12,8 @@ import { Server } from "socket.io";
 import path from "path";
 import mongoose from "mongoose";
 import MongoStore from "connect-mongo";
+import passport from "passport";
+import initalizePassport from "./config/passport.js";
 import ProductManager from "./dao/managers_mongo/productManagerMongo.js";
 import MessageManager from "./dao/managers_mongo/chat.ManagerMongo.js";
 import SessionManager from "./dao/managers_mongo/sessionManagerMongo.js";
@@ -62,6 +64,9 @@ app.use(
     saveUninitialized: false,
   })
 );
+initalizePassport();
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.engine("handlebars", engine());
 app.set("view engine", "handlebars");
